@@ -143,18 +143,49 @@ async function loadTasks() {
             return new Date(a.due_date) - new Date(b.due_date);
         });
 
-        taskList.innerHTML = tasks.map(task => `
-            <div class="glass p-5 rounded-xl card-hover transition-all fade-in priority-${task.priority.toLowerCase()} border-y border-r border-white/5 relative">
+        taskList.innerHTML = tasks.map(task => {
+            let titleClasses = "text-xl font-bold text-white mb-2 tracking-tight";
+            let containerOpacity = "";
+            let displayDate = 'No Date';
+            
+            if (task.due_date) {
+                const parts = task.due_date.split('-');
+                if (parts.length === 3) {
+                    displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                } else {
+                    displayDate = task.due_date;
+                }
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const dueDateObj = new Date(task.due_date);
+                dueDateObj.setHours(0, 0, 0, 0);
                 
-                <div class="flex justify-between items-start">
+                const diffTime = dueDateObj - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays < 0) {
+                    titleClasses += " line-through opacity-60";
+                    containerOpacity = "opacity-60 grayscale-[50%]";
+                } else if (diffDays <= 3) {
+                    titleClasses = titleClasses.replace("text-white", "text-red-400");
+                }
+            }
+
+            return `
+            <div class="glass p-5 rounded-xl card-hover transition-all fade-in priority-${task.priority.toLowerCase()} border-y border-r border-white/5 relative ${containerOpacity}">
+                
+                ${!task.is_owner ? `
+                <div class="absolute top-4 right-4 bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs px-2 py-1 rounded-md font-medium z-10">Shared</div>
+                ` : ''}
+
+                <div class="flex gap-4">
                     <div class="flex-1">
-                        <div class="flex items-center space-x-3 mb-1">
-                            <h4 class="text-xl font-bold text-white">${task.title}</h4>
-                            ${!task.is_owner ? `<span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30">Shared File</span>` : ''}
-                        </div>
-                        <p class="text-sm text-slate-300 mb-4 line-clamp-2">${task.description || 'No description provided.'}</p>
-                        <div class="flex items-center space-x-4 text-xs font-semibold">
-                            <span class="bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-lg border border-indigo-500/20">📅 ${task.due_date || 'No Date'}</span>
+                        <h4 class="${titleClasses}">${task.title}</h4>
+                        <p class="text-slate-300 text-sm mb-4 leading-relaxed">${task.description || '<em class="opacity-50">No description</em>'}</p>
+                        
+                        <div class="flex items-center gap-4 text-xs font-semibold">
+                            <span class="bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-lg border border-indigo-500/20">📅 ${displayDate}</span>
                             <span class="bg-slate-800 text-slate-300 px-3 py-1 rounded-lg border border-white/10">⚡ ${task.priority}</span>
                         </div>
                     </div>
@@ -177,7 +208,8 @@ async function loadTasks() {
                 </div>
                 ` : ''}
             </div>
-        `).join('');
+            `;
+        }).join('');
     } catch (err) {
         taskList.innerHTML = `<div class="p-8 text-center text-red-400 font-semibold">${err.message}</div>`;
         if(err.message.includes('Token has expired')) logoutBtn.click();
