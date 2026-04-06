@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -7,7 +7,6 @@ import datetime
 import os
 
 app = Flask(__name__)
-# Configurations
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///collabtask.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'super-secret-collabtask-key' 
@@ -18,17 +17,19 @@ bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 CORS(app) # Essential for frontend communication
 
-# --- Models ---
-# Association table for shared tasks
 shared_tasks = db.Table('shared_tasks',
     db.Column('task_id', db.Integer, db.ForeignKey('task.id'), primary_key=True),
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
 )
 
-# Association table for group membership
 group_members = db.Table('group_members',
     db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True),
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+)
+
+group_tasks = db.Table('group_tasks',
+    db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True),
+    db.Column('task_id', db.Integer, db.ForeignKey('task.id'), primary_key=True)
 )
 
 class User(db.Model):
@@ -57,12 +58,22 @@ class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    tasks = db.relationship('Task', secondary=group_tasks, lazy='subquery',
+        backref=db.backref('group_shares', lazy=True))
 
 with app.app_context():
     db.create_all()
 
 
-# --- Routes ---
+
+@app.route('/')
+def serve_index():
+    return send_from_directory('.', 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    return send_from_directory('.', path)
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -126,7 +137,11 @@ def get_tasks():
     owned_tasks = Task.query.filter_by(owner_id=user_id).all()
     shared = user.shared_tasks
     
-    all_tasks = owned_tasks + shared
+    group_shared_tasks = []
+    for g in user.groups + user.owned_groups:
+        group_shared_tasks.extend(g.tasks)
+    
+    all_tasks = owned_tasks + shared + group_shared_tasks
     all_tasks = list({t.id: t for t in all_tasks}.values())
     
     tasks_data = []
@@ -179,20 +194,42 @@ def share_task(task_id):
         return jsonify({"msg": "Unauthorized. Only owner can share."}), 403
         
     data = request.get_json()
-    share_with_id = data.get('user_id')
+    share_with_username = data.get('username')
     
-    if not share_with_id:
-        return jsonify({"msg": "user_id is required"}), 400
+    if not share_with_username:
+        return jsonify({"msg": "username is required"}), 400
         
-    user_to_share = User.query.get(share_with_id)
+    user_to_share = User.query.filter_by(username=share_with_username).first()
     if not user_to_share:
-        return jsonify({"msg": f"User with ID {share_with_id} not found"}), 404
+        return jsonify({"msg": f"User {share_with_username} not found"}), 404
         
     if task not in user_to_share.shared_tasks:
         user_to_share.shared_tasks.append(task)
         db.session.commit()
         
     return jsonify({"msg": f"Task shared with user {user_to_share.username} successfully"}), 200
+
+@app.route('/tasks/<int:task_id>/share_group', methods=['POST'])
+@jwt_required()
+def share_to_group(task_id):
+    user_id = int(get_jwt_identity())
+    task = Task.query.get_or_404(task_id)
+    
+    if task.owner_id != user_id:
+        return jsonify({"msg": "Unauthorized. Only owner can share."}), 403
+        
+    data = request.get_json()
+    group_id = data.get('group_id')
+    
+    group = Group.query.get(group_id)
+    if not group:
+        return jsonify({"msg": "Group not found"}), 404
+        
+    if task not in group.tasks:
+        group.tasks.append(task)
+        db.session.commit()
+        
+    return jsonify({"msg": f"Task shared to group {group.name} successfully"}), 200
 
 @app.route('/groups', methods=['POST', 'GET'])
 @jwt_required()
@@ -236,14 +273,14 @@ def add_to_group(group_id):
         return jsonify({"msg": "Unauthorized. Only the group owner can add members."}), 403
         
     data = request.get_json()
-    add_user_id = data.get('user_id')
+    add_username = data.get('username')
     
-    if not add_user_id:
-        return jsonify({"msg": "user_id is required"}), 400
+    if not add_username:
+        return jsonify({"msg": "username is required"}), 400
         
-    user_to_add = User.query.get(add_user_id)
+    user_to_add = User.query.filter_by(username=add_username).first()
     if not user_to_add:
-        return jsonify({"msg": f"User with ID {add_user_id} not found"}), 404
+        return jsonify({"msg": f"User {add_username} not found"}), 404
         
     if user_to_add not in group.members:
         group.members.append(user_to_add)

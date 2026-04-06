@@ -1,0 +1,18 @@
+# Ignore SQLite databases (This prevents people from seeing your users, passwords, and task data on GitHub)
+*.db
+*.sqlite3
+instance/
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore Virtual Environments
+venv/
+env/
+.venv/
+
+# Environment Variables
+.env
+.flaskenv
