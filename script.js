@@ -31,7 +31,17 @@ async function apiCall(endpoint, method = 'GET', body = null) {
     if (body) config.body = JSON.stringify(body);
 
     const res = await fetch(`${API_URL}${endpoint}`, config);
-    const data = await res.json();
+    
+    // Safely try to parse JSON
+    let data;
+    const text = await res.text();
+    try {
+        data = JSON.parse(text);
+    } catch (err) {
+        // If it fails to parse JSON, it's likely a 500 Internal Server Error HTML page from Vercel/Flask
+        throw new Error(`Server Error (${res.status}): The backend crashed. Check Vercel logs.`);
+    }
+
     if (!res.ok) {
         throw new Error(data.msg || 'API Error');
     }
@@ -193,16 +203,16 @@ async function loadTasks() {
                 </div>
                 ${task.is_owner ? `
                 <div class="mt-5 flex gap-3 pt-4 border-t border-white/5 flex-wrap">
-                    <button onclick="triggerShareAction(${task.id})" class="text-sm px-4 py-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/20 transition-colors font-medium flex items-center gap-2">
+                    <button onclick="triggerShareAction('${task.id}')" class="text-sm px-4 py-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/20 transition-colors font-medium flex items-center gap-2">
                         Share (User)
                     </button>
-                    <button onclick="triggerShareGroupAction(${task.id})" class="text-sm px-4 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/20 transition-colors font-medium">
+                    <button onclick="triggerShareGroupAction('${task.id}')" class="text-sm px-4 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/20 transition-colors font-medium">
                         Send to Group
                     </button>
                     <button onclick='triggerEditTask(${JSON.stringify(task).replace(/'/g, "&#39;")})' class="text-sm px-4 py-1.5 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/20 transition-colors font-medium">
                         Edit
                     </button>
-                    <button onclick="deleteTask(${task.id})" class="text-sm px-4 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/20 transition-colors font-medium">
+                    <button onclick="deleteTask('${task.id}')" class="text-sm px-4 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/20 transition-colors font-medium">
                         Delete
                     </button>
                 </div>
@@ -260,7 +270,7 @@ async function loadGroups() {
                     </div>
                 </div>
                 ${group.owner_id === currentUser.id ? `
-                <button onclick="triggerGroupAddAction(${group.id})" class="w-full btn-secondary py-2 rounded-lg text-sm font-semibold text-white mt-1 border-white/10 hover:border-white/20">
+                <button onclick="triggerGroupAddAction('${group.id}')" class="w-full btn-secondary py-2 rounded-lg text-sm font-semibold text-white mt-1 border-white/10 hover:border-white/20">
                     + Add Member
                 </button>
                 ` : ''}
@@ -375,7 +385,7 @@ shareGroupForm.addEventListener('submit', async (e) => {
     if(!groupId) return;
     
     try {
-        await apiCall(`/tasks/${taskId}/share_group`, 'POST', { group_id: parseInt(groupId) });
+        await apiCall(`/tasks/${taskId}/share_group`, 'POST', { group_id: groupId });
         shareGroupModal.classList.add('hidden-pane');
         alert("Task successfully shared to group!");
         loadTasks();
