@@ -128,59 +128,95 @@ logoutBtn.addEventListener('click', () => {
     showAuth();
 });
 
+let allTasks = []; // Store tasks for frontend filtering
+
 async function loadTasks() {
     const taskList = document.getElementById('task-list');
     taskList.innerHTML = '<div class="p-8 text-center text-slate-400 font-medium">Loading your tasks...</div>';
     try {
-        const tasks = await apiCall('/tasks');
-        if(tasks.length === 0) {
-            taskList.innerHTML = '<div class="p-8 text-center text-slate-400 font-medium">No tasks found. Create a new task!</div>';
-            return;
+        allTasks = await apiCall('/tasks');
+        renderTasks(allTasks);
+    } catch (err) {
+        taskList.innerHTML = `<div class="p-8 text-center text-red-400 font-semibold">${err.message}</div>`;
+        if(err.message.includes('Token has expired')) logoutBtn.click();
+    }
+}
+
+function renderTasks(tasks) {
+    const taskList = document.getElementById('task-list');
+    if(tasks.length === 0) {
+        taskList.innerHTML = '<div class="p-8 text-center text-slate-400 font-medium">No tasks found.</div>';
+        return;
+    }
+    
+    const priorityScore = { 'High': 3, 'Medium': 2, 'Low': 1 };
+    tasks.sort((a, b) => {
+        // ALWAYS put "done" tasks at the bottom
+        if (a.is_done !== b.is_done) {
+            return a.is_done ? 1 : -1;
+        }
+
+        const scoreA = priorityScore[a.priority] || 0;
+        const scoreB = priorityScore[b.priority] || 0;
+        if (scoreA !== scoreB) {
+            return scoreB - scoreA;
         }
         
-        const priorityScore = { 'High': 3, 'Medium': 2, 'Low': 1 };
-        tasks.sort((a, b) => {
-            const scoreA = priorityScore[a.priority] || 0;
-            const scoreB = priorityScore[b.priority] || 0;
-            if (scoreA !== scoreB) {
-                return scoreB - scoreA;
-            }
-            
-            if (!a.due_date && !b.due_date) return 0;
-            if (!a.due_date) return 1;
-            if (!b.due_date) return -1;
-            
-            return new Date(a.due_date) - new Date(b.due_date);
-        });
+        if (!a.due_date && !b.due_date) return 0;
+        if (!a.due_date) return 1;
+        if (!b.due_date) return -1;
+        
+        return new Date(a.due_date) - new Date(b.due_date);
+    });
 
         taskList.innerHTML = tasks.map(task => {
             let titleClasses = "text-xl font-bold text-white mb-2 tracking-tight";
             let containerOpacity = "";
             let displayDate = 'No Date';
             
-            if (task.due_date) {
-                const parts = task.due_date.split('-');
-                if (parts.length === 3) {
-                    displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                } else {
-                    displayDate = task.due_date;
-                }
+        let daysLeftTag = '';
+        
+        if (task.due_date) {
+            const parts = task.due_date.split('-');
+            if (parts.length === 3) {
+                displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+            } else {
+                displayDate = task.due_date;
+            }
 
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const dueDateObj = new Date(task.due_date);
-                dueDateObj.setHours(0, 0, 0, 0);
-                
-                const diffTime = dueDateObj - today;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                if (diffDays < 0) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const dueDateObj = new Date(task.due_date);
+            dueDateObj.setHours(0, 0, 0, 0);
+            
+            const diffTime = dueDateObj - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            let daysClass = "bg-slate-800 text-slate-300 border-white/10";
+            if (diffDays < 0) {
+                daysClass = "bg-red-500/20 text-red-300 border-red-500/20";
+                daysLeftTag = `<span class="${daysClass} px-3 py-1 rounded-lg border font-semibold">Overdue</span>`;
+                if(!task.is_done) {
                     titleClasses += " line-through opacity-60";
                     containerOpacity = "opacity-60 grayscale-[50%]";
-                } else if (diffDays <= 3) {
-                    titleClasses = titleClasses.replace("text-white", "text-red-400");
                 }
+            } else if (diffDays === 0) {
+                daysClass = "bg-orange-500/20 text-orange-300 border-orange-500/20";
+                daysLeftTag = `<span class="${daysClass} px-3 py-1 rounded-lg border font-bold">Due Today!</span>`;
+            } else {
+                if(diffDays <= 3) {
+                    daysClass = "bg-orange-500/20 text-orange-300 border-orange-500/20";
+                    if(!task.is_done) titleClasses = titleClasses.replace("text-white", "text-orange-400");
+                }
+                daysLeftTag = `<span class="${daysClass} px-3 py-1 rounded-lg border font-semibold">⏳ ${diffDays} day${diffDays > 1 ? 's' : ''} left</span>`;
             }
+        }
+
+        // Apply Done styles overriding overdue styles
+        if (task.is_done) {
+            titleClasses = "text-xl font-bold mb-2 tracking-tight line-through opacity-60 text-slate-400";
+            containerOpacity = "opacity-50 grayscale border-slate-700";
+        }
 
             return `
             <div class="glass p-5 rounded-xl card-hover transition-all fade-in priority-${task.priority.toLowerCase()} border-y border-r border-white/5 relative ${containerOpacity}">
@@ -194,35 +230,54 @@ async function loadTasks() {
                         <h4 class="${titleClasses}">${task.title}</h4>
                         <p class="text-slate-300 text-sm mb-4 leading-relaxed">${task.description || '<em class="opacity-50">No description</em>'}</p>
                         
-                        <div class="flex items-center gap-4 text-xs font-semibold">
-                            <span class="bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-lg border border-indigo-500/20">📅 ${displayDate}</span>
-                            <span class="bg-slate-800 text-slate-300 px-3 py-1 rounded-lg border border-white/10">⚡ ${task.priority}</span>
-                        </div>
+                    <div class="flex items-center gap-4 text-xs font-semibold">
+                        ${daysLeftTag}
+                        <span class="bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-lg border border-indigo-500/20">📅 ${displayDate}</span>
+                        <span class="bg-slate-800 text-slate-300 px-3 py-1 rounded-lg border border-white/10">⚡ ${task.priority}</span>
+                    </div>
                     </div>
                     ${task.image_url ? `<img src="${task.image_url}" alt="Task" class="w-20 h-20 object-cover rounded-xl shadow-lg ml-4 border border-white/10">` : ''}
                 </div>
                 ${task.is_owner ? `
-                <div class="mt-5 flex gap-3 pt-4 border-t border-white/5 flex-wrap">
-                    <button onclick="triggerShareAction('${task.id}')" class="text-sm px-4 py-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/20 transition-colors font-medium flex items-center gap-2">
-                        Share (User)
-                    </button>
-                    <button onclick="triggerShareGroupAction('${task.id}')" class="text-sm px-4 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/20 transition-colors font-medium">
-                        Send to Group
-                    </button>
-                    <button onclick='triggerEditTask(${JSON.stringify(task).replace(/'/g, "&#39;")})' class="text-sm px-4 py-1.5 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/20 transition-colors font-medium">
-                        Edit
-                    </button>
-                    <button onclick="deleteTask('${task.id}')" class="text-sm px-4 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/20 transition-colors font-medium">
-                        Delete
-                    </button>
-                </div>
-                ` : ''}
+            <div class="mt-5 flex gap-3 pt-4 border-t border-white/5 flex-wrap">
+                <button onclick="toggleTaskDone('${task.id}', ${!task.is_done})" class="text-sm px-4 py-1.5 rounded-lg ${task.is_done ? 'bg-slate-500/20 text-slate-300 border-slate-500/20' : 'bg-green-500/20 text-green-300 border-green-500/20'} hover:opacity-80 border transition-colors font-medium">
+                    ${task.is_done ? 'Mark Undone' : '✓ Mark as Done'}
+                </button>
+                <button onclick="triggerShareAction('${task.id}')" class="text-sm px-4 py-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/20 transition-colors font-medium flex items-center gap-2">
+                    Share (User)
+                </button>
+                <button onclick="triggerShareGroupAction('${task.id}')" class="text-sm px-4 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/20 transition-colors font-medium">
+                    Send to Group
+                </button>
+                <button onclick='triggerEditTask(${JSON.stringify(task).replace(/'/g, "&#39;")})' class="text-sm px-4 py-1.5 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/20 transition-colors font-medium">
+                    Edit
+                </button>
+                <button onclick="deleteTask('${task.id}')" class="text-sm px-4 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/20 transition-colors font-medium">
+                    Delete
+                </button>
             </div>
-            `;
-        }).join('');
-    } catch (err) {
-        taskList.innerHTML = `<div class="p-8 text-center text-red-400 font-semibold">${err.message}</div>`;
-        if(err.message.includes('Token has expired')) logoutBtn.click();
+            ` : ''}
+        </div>
+        `;
+    }).join('');
+}
+
+// Search Logic
+document.getElementById('task-search-input')?.addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    const filteredTasks = allTasks.filter(t => 
+        t.title.toLowerCase().includes(term) || 
+        (t.description && t.description.toLowerCase().includes(term))
+    );
+    renderTasks(filteredTasks);
+});
+
+async function toggleTaskDone(id, isDoneValue) {
+    try {
+        await apiCall(`/tasks/${id}`, 'PUT', { is_done: isDoneValue });
+        loadTasks(); // Reload to get fresh sorting
+    } catch(err) {
+        alert(err.message);
     }
 }
 

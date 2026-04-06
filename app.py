@@ -85,6 +85,7 @@ def create_task():
         "due_date": data.get('due_date'),
         "priority": data.get('priority', 'Medium'),
         "image_url": data.get('image_url'),
+        "is_done": False,       # Default to False
         "owner_id": user_id,
         "shared_with": [],      # List of user_id strings
         "shared_groups": []     # List of group_id strings
@@ -126,6 +127,7 @@ def get_tasks():
             "due_date": t.get('due_date'),
             "priority": t.get('priority'),
             "image_url": t.get('image_url'),
+            "is_done": t.get('is_done', False),
             "is_owner": t.get('owner_id') == user_id,
             "owner_id": t.get('owner_id')
         })
@@ -161,6 +163,7 @@ def update_delete_task(task_id):
         if 'due_date' in data: update_fields['due_date'] = data['due_date']
         if 'priority' in data: update_fields['priority'] = data['priority']
         if 'image_url' in data: update_fields['image_url'] = data['image_url']
+        if 'is_done' in data: update_fields['is_done'] = data['is_done']
         
         if update_fields:
             tasks_collection.update_one({"_id": obj_id}, {"$set": update_fields})

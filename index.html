@@ -216,13 +216,22 @@
                                 </svg>
                                 My Tasks
                             </h3>
-                            <button id="show-task-modal-btn"
-                                class="btn-primary px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2">
-                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 4v16m8-8H4" />
-                                </svg>
-                                New Task
-                            </button>
+                            <div class="flex items-center gap-4">
+                                <div class="relative">
+                                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                    <input type="text" id="task-search-input" placeholder="Search tasks..." 
+                                        class="glass-input pl-10 pr-4 py-2 rounded-lg text-sm w-48 focus:w-64 transition-all">
+                                </div>
+                                <button id="show-task-modal-btn"
+                                    class="btn-primary px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2">
+                                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    New Task
+                                </button>
+                            </div>
                         </div>
                         <div id="task-list" class="flex-1 overflow-y-auto p-4 space-y-4">
                             <div class="p-8 text-center text-slate-400 font-medium">Loading your tasks...</div>
