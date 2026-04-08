@@ -76,13 +76,66 @@ toggleAuthBtn.addEventListener('click', (e) => {
     authSubmitBtn.textContent = isLogin ? 'Sign In' : 'Register';
     toggleAuthBtn.textContent = isLogin ? 'Don\'t have an account? Register' : 'Already have an account? Sign in';
     authError.classList.add('hidden-pane');
+    
+    if (isLogin) {
+        confirmPasswordContainer.classList.add('hidden-pane');
+        confirmPasswordInput.required = false;
+    } else {
+        confirmPasswordContainer.classList.remove('hidden-pane');
+        confirmPasswordInput.required = true;
+    }
+});
+
+const togglePasswordBtn = document.getElementById('toggle-password');
+const passwordInput = document.getElementById('password');
+const eyeIcon = document.getElementById('eye-icon');
+const eyeSlashIcon = document.getElementById('eye-slash-icon');
+
+const confirmPasswordContainer = document.getElementById('confirm-password-container');
+const confirmPasswordInput = document.getElementById('confirm-password');
+const toggleConfirmPasswordBtn = document.getElementById('toggle-confirm-password');
+const eyeIconConfirm = document.getElementById('eye-icon-confirm');
+const eyeSlashIconConfirm = document.getElementById('eye-slash-icon-confirm');
+
+togglePasswordBtn.addEventListener('click', () => {
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.classList.add('hidden-pane');
+        eyeSlashIcon.classList.remove('hidden-pane');
+    } else {
+        passwordInput.type = 'password';
+        eyeIcon.classList.remove('hidden-pane');
+        eyeSlashIcon.classList.add('hidden-pane');
+    }
+});
+
+toggleConfirmPasswordBtn.addEventListener('click', () => {
+    if (confirmPasswordInput.type === 'password') {
+        confirmPasswordInput.type = 'text';
+        eyeIconConfirm.classList.add('hidden-pane');
+        eyeSlashIconConfirm.classList.remove('hidden-pane');
+    } else {
+        confirmPasswordInput.type = 'password';
+        eyeIconConfirm.classList.remove('hidden-pane');
+        eyeSlashIconConfirm.classList.add('hidden-pane');
+    }
 });
 
 authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
+    const confirmPassword = confirmPasswordInput.value;
     authError.classList.add('hidden-pane');
+
+    if (!isLogin && password !== confirmPassword) {
+        authError.classList.remove('hidden-pane');
+        authError.classList.replace('bg-green-400/10', 'bg-red-400/10');
+        authError.classList.replace('text-green-400', 'text-red-400');
+        authError.classList.replace('border-green-400/20', 'border-red-400/20');
+        authError.textContent = "Passwords do not match.";
+        return;
+    }
 
     authSubmitBtn.textContent = 'Please wait...';
     authSubmitBtn.disabled = true;
@@ -107,6 +160,9 @@ authForm.addEventListener('submit', async (e) => {
             authError.classList.replace('text-red-400', 'text-green-400');
             authError.classList.replace('border-red-400/20', 'border-green-400/20');
             document.getElementById('password').value = '';
+            confirmPasswordInput.value = '';
+            confirmPasswordContainer.classList.add('hidden-pane');
+            confirmPasswordInput.required = false;
         }
     } catch (err) {
         authError.classList.remove('hidden-pane');
