@@ -1063,4 +1063,23 @@ function renderRoles(roles) {
     }).join("");
 }
 
+window.switchTab = function(tabName) {
+    const workflowBtn = document.getElementById('tab-btn-workflow');
+    const manageBtn = document.getElementById('tab-btn-manage');
+    const paneWorkflow = document.getElementById('pane-workflow');
+    const paneManage = document.getElementById('pane-manage');
+
+    if(tabName === 'workflow') {
+        workflowBtn.className = "text-sm font-bold border-b-2 border-brand-default text-brand-default px-1 py-3 transition-colors text-white";
+        manageBtn.className = "text-sm font-medium border-b-2 border-transparent text-dark-muted hover:text-white px-1 py-3 transition-colors";
+        paneWorkflow.classList.remove('hidden-pane');
+        paneManage.classList.add('hidden-pane');
+    } else {
+        workflowBtn.className = "text-sm font-medium border-b-2 border-transparent text-dark-muted hover:text-white px-1 py-3 transition-colors";
+        manageBtn.className = "text-sm font-bold border-b-2 border-brand-default text-brand-default px-1 py-3 transition-colors text-white";
+        paneWorkflow.classList.add('hidden-pane');
+        paneManage.classList.remove('hidden-pane');
+    }
+}
+
 init();
