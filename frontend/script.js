@@ -264,7 +264,7 @@ function getRoleHtml(role, extraClasses='text-[9px]') {
     return `<span class="${classes}" ${style}>${role}</span>`;
 }
 
-function selectProject(id) {
+async function selectProject(id) {
     activeProjectId = id;
     const project = allProjects.find(p => p.id === id);
     if (!project) return;
@@ -339,7 +339,7 @@ function selectProject(id) {
     }
 
     switchTab('workflow');
-    loadTasks();
+    await loadTasks(); 
     renderRoles(project.custom_roles);
 }
 
