@@ -7,17 +7,17 @@ import datetime
 tasks_bp = Blueprint('tasks', __name__)
 
 def is_in_task_tree(target_task_id, root_task_id):
-    if str(target_task_id) == str(root_task_id):
-        return True
     current_id = target_task_id
     while current_id:
+        if str(current_id) == str(root_task_id):
+            return True
         try:
             t = tasks_collection.find_one({"_id": ObjectId(current_id)})
             if not t:
                 return False
             parent_id = t.get('parent_task_id')
-            if str(parent_id) == str(root_task_id):
-                return True
+            if not parent_id:
+                return False
             current_id = parent_id
         except:
             return False
@@ -54,18 +54,21 @@ def create_task():
                     
         parent_task_id = data.get('parent_task_id')
         
-        # Check custom roles
-        if user_role not in ['Admin', 'Viewer', 'Member']:
+        # Check custom roles: MUST be in the assigned subtree
+        if user_role not in ['Admin', 'Viewer']:
             custom_role = next((cr for cr in project.get('custom_roles', []) if cr.get('name') == user_role), None)
             if custom_role:
                 assigned_task_id = custom_role.get('task_id')
-                if parent_task_id:
-                    if not is_in_task_tree(parent_task_id, assigned_task_id):
-                        allowed = False
+                # For custom roles, parent_task_id is MANDATORY (cannot create root tasks)
+                # and must be within the assigned subtree
+                if parent_task_id and is_in_task_tree(parent_task_id, assigned_task_id):
+                    allowed = True
                 else:
                     allowed = False
             else:
                 allowed = False
+        elif user_role == 'Admin':
+            allowed = True
 
         if not allowed or user_role == 'Viewer':
             return jsonify({"msg": "Unauthorized to create this task"}), 403
@@ -183,11 +186,14 @@ def update_delete_task(task_id):
                     break
 
     has_custom_access = False
-    if user_role not in ['Admin', 'Viewer', 'Member']:
+    if user_role not in ['Admin', 'Viewer']:
         custom_role = next((cr for cr in project.get('custom_roles', []) if cr.get('name') == user_role), None)
         if custom_role:
             assigned_task_id = custom_role.get('task_id')
             has_custom_access = is_in_task_tree(task_id, assigned_task_id)
+            # BLOCK any access for custom role if outside assigned subtree
+            if not has_custom_access:
+                return jsonify({"msg": "Your role does not have access to this task branch"}), 403
 
     if request.method == 'DELETE':
         if user_role != 'Admin' and not has_custom_access:
@@ -203,13 +209,8 @@ def update_delete_task(task_id):
             return jsonify({"msg": "Viewers cannot edit tasks"}), 403
 
         if not (user_role == 'Admin' or has_custom_access):
-            if any(k in data for k in ['title', 'description', 'due_date', 'priority', 'assignees']):
-                return jsonify({"msg": "Members cannot edit task details"}), 403
-            
-            if 'is_done' in data:
-                is_assigned = user_id in task.get('assignees', [])
-                if not is_assigned:
-                    return jsonify({"msg": "Members can only mark assigned tasks as done"}), 403
+            # If not Admin or authorized custom role, block everything
+            return jsonify({"msg": "Unauthorized access to this task branch"}), 403
 
         update_fields = {}
         if 'title' in data: update_fields['title'] = data['title']

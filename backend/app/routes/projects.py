@@ -120,7 +120,7 @@ def add_member(project_id):
         
     data = request.get_json()
     add_username = data.get('username')
-    role = data.get('role', 'Member')
+    role = data.get('role', 'Viewer')
     
     if not add_username:
         return jsonify({"msg": "username is required"}), 400
@@ -303,4 +303,30 @@ def delete_custom_role(project_id, role_id):
         {"$pull": {"custom_roles": {"id": role_id}}}
     )
     return jsonify({"msg": "Custom role deleted"})
+
+@projects_bp.route('/<project_id>', methods=['PUT'])
+@jwt_required()
+def update_project(project_id):
+    user_id = get_jwt_identity()
+    try:
+        obj_id = ObjectId(project_id)
+    except:
+        return jsonify({"msg": "Invalid project ID"}), 400
+        
+    project = projects_collection.find_one({"_id": obj_id})
+    if not project:
+        return jsonify({"msg": "Project not found"}), 404
+        
+    if project.get('owner_id') != user_id:
+        return jsonify({"msg": "Only project owner can edit details"}), 403
+        
+    data = request.get_json()
+    update_fields = {}
+    if 'name' in data: update_fields['name'] = data['name']
+    if 'description' in data: update_fields['description'] = data['description']
+    
+    if update_fields:
+        projects_collection.update_one({"_id": obj_id}, {"$set": update_fields})
+        
+    return jsonify({"msg": "Project updated"})
 

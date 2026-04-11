@@ -252,7 +252,6 @@ function getRoleHtml(role, extraClasses='text-[9px]') {
     let style = "";
     if(role === 'Admin') classes += 'text-red-400 bg-red-400/10 border-red-400/20';
     else if(role === 'Viewer') classes += 'text-dark-muted bg-dark-hover border-dark-border';
-    else if(role === 'Member') classes += 'text-blue-400 bg-brand-default/10 border-brand-default/20';
     else if(activeProjectId) {
         const p = allProjects.find(x => x.id === activeProjectId);
         if(p && p.custom_roles) {
@@ -311,8 +310,15 @@ function selectProject(id) {
         delBtn.classList.remove('hidden-pane');
         addBtn.classList.remove('hidden-pane');
         document.getElementById('show-add-role-btn').classList.remove('hidden-pane');
+        // Show edit project button ONLY for owner (true Admin)
+        if(project.owner_id === currentUser.id) {
+            document.getElementById('show-edit-project-btn').classList.remove('hidden-pane');
+        } else {
+            document.getElementById('show-edit-project-btn').classList.add('hidden-pane');
+        }
     } else {
         document.getElementById('show-add-role-btn').classList.add('hidden-pane');
+        document.getElementById('show-edit-project-btn').classList.add('hidden-pane');
         leaveBtn.classList.remove('hidden-pane');
     }
     
@@ -325,6 +331,13 @@ function selectProject(id) {
     
     // filter so tasks can only be assigned to "Joined" members
     projectMembers = project.members.filter(m => m.status === 'Joined');
+    
+    // Auto-fill hidden setttings inputs
+    if(project.owner_id === currentUser.id) {
+        document.getElementById('edit-proj-name').value = project.name;
+        document.getElementById('edit-proj-desc').value = project.description || '';
+    }
+
     switchTab('workflow');
     loadTasks();
     renderRoles(project.custom_roles);
@@ -773,21 +786,30 @@ document.getElementById('remark-form').addEventListener('submit', async(e) => {
 function renderRoles(roles) {
     const list = document.getElementById('project-roles-list');
     if(!roles || roles.length === 0) {
-        list.innerHTML = '<div class="text-xs text-dark-muted italic">No custom roles created.</div>';
+        list.innerHTML = '<div class="text-xs text-dark-muted italic text-center p-8 bg-dark-base/50 rounded-lg border border-dashed border-dark-border">No custom roles created.</div>';
         return;
     }
     list.innerHTML = roles.map(r => {
         const taskObj = allTasks.find(t => t.id === r.task_id);
         const taskName = taskObj ? taskObj.title : 'Deleted Task';
         return `
-        <div class="bg-dark-base border border-dark-border p-3 rounded-lg flex flex-col gap-2">
+        <div class="bg-dark-base border border-dark-border p-4 rounded-xl flex flex-col gap-3 shadow-md">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold px-2 py-0.5 rounded border uppercase inline-block" style="color: ${r.color}; background-color: ${r.color}1a; border-color: ${r.color}33">${r.name}</span>
-                <button onclick="deleteCustomRole('${r.id}')" class="text-red-500 hover:bg-red-500/10 p-1 rounded transition-colors" title="Delete Role">
-                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full" style="background-color: ${r.color}"></div>
+                    <span class="text-xs font-bold text-white uppercase tracking-tight">${r.name}</span>
+                </div>
+                <button onclick="deleteCustomRole('${r.id}')" class="text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors" title="Delete Role">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </button>
             </div>
-            <div class="text-[10px] text-dark-muted truncate"><b>Subtree Link:</b> ${taskName}</div>
+            <div class="pt-2 border-t border-dark-border/50">
+                <div class="text-[10px] text-dark-muted mb-1 font-bold uppercase tracking-wider">Root Access</div>
+                <div class="flex items-center gap-2 bg-dark-panel p-2 rounded-lg border border-dark-border">
+                    <svg class="text-brand-default" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    <span class="text-[11px] text-white truncate font-medium">${taskName}</span>
+                </div>
+            </div>
         </div>
         `;
     }).join('');
@@ -808,11 +830,48 @@ window.triggerCreateRole = function() {
     } else {
         taskSelect.innerHTML = allTasks.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
     }
+    
+    // EXCLUDE TAKEN COLORS
+    const p = allProjects.find(x => x.id === activeProjectId);
+    const takenColors = p && p.custom_roles ? p.custom_roles.map(r => r.color.toUpperCase()) : [];
+    const dots = document.querySelectorAll('#role-color-picker div');
+    let firstAvailable = null;
+
+    dots.forEach(dot => {
+        // Get hex from onclick string
+        const match = dot.getAttribute('onclick').match(/#(?:[0-9a-fA-F]{3}){1,2}/);
+        const hex = match ? match[0].toUpperCase() : '';
+        if(takenColors.includes(hex)) {
+            dot.classList.add('opacity-10', 'pointer-events-none', 'grayscale');
+        } else {
+            dot.classList.remove('opacity-10', 'pointer-events-none', 'grayscale');
+            if(!firstAvailable) firstAvailable = { hex, el: dot };
+        }
+    });
+
     document.getElementById('role-modal').classList.remove('hidden-pane');
     
-    // Reset color picker to first color (Blue)
-    const firstColor = document.querySelector('#role-color-picker div');
-    if(firstColor) selectRoleColor('#3B82F6', firstColor);
+    // Reset color picker to first available color
+    if(firstAvailable) selectRoleColor(firstAvailable.hex, firstAvailable.el);
+}
+
+window.toggleProjectSettings = function() {
+    const sec = document.getElementById('project-settings-sec');
+    if(sec.classList.contains('hidden-pane')) {
+        sec.classList.remove('hidden-pane');
+    } else {
+        sec.classList.add('hidden-pane');
+    }
+}
+
+window.updateProjectDetails = async function() {
+    const name = document.getElementById('edit-proj-name').value;
+    const description = document.getElementById('edit-proj-desc').value;
+    try {
+        await apiCall(`/projects/${activeProjectId}`, 'PUT', { name, description });
+        toggleProjectSettings(); // close modal
+        loadProjects();
+    } catch(err) { alert(err.message); }
 }
 
 window.selectRoleColor = function(hex, el) {
@@ -861,7 +920,6 @@ const actionConfirm = document.getElementById('action-confirm-btn');
 
 const roleDescriptions = {
     'Admin': 'Full access. Can assign roles, manage members, delete projects, and edit or mark any tasks as done.',
-    'Member': 'Standard access. Can interact with tasks assigned to them, create new subtasks, and leave remarks.',
     'Viewer': 'Read-only access. Can only observe project progress, read tasks, and view remarks.'
 };
 
@@ -889,7 +947,6 @@ function customAction(title, desc, config, callback) {
     }
     actionRole.innerHTML = `
         <option value="Admin">Admin</option>
-        <option value="Member">Member</option>
         <option value="Viewer">Viewer</option>
         ${customRoleHtml}
     `;
@@ -901,11 +958,11 @@ function customAction(title, desc, config, callback) {
         actionInputSec.classList.remove('hidden-pane');
         actionRoleSec.classList.remove('hidden-pane');
         actionInput.value = '';
-        actionRole.value = 'Member';
-        actionRoleDesc.textContent = roleDescriptions['Member'];
+        actionRole.value = 'Viewer';
+        actionRoleDesc.textContent = roleDescriptions['Viewer'];
     } else if(actionType === 'edit_role') {
         actionRoleSec.classList.remove('hidden-pane');
-        actionRole.value = config.defaultRole || 'Member';
+        actionRole.value = config.defaultRole || 'Viewer';
         actionRoleDesc.textContent = roleDescriptions[actionRole.value] || 'Custom role strictly bound to a task subtree.';
     }
     
