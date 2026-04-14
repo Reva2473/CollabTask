@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Professional Project Management">
-    <title>NexGen Project Manager</title>
+    <title>TaskMatrix Project Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -14,281 +14,380 @@
                 extend: {
                     colors: {
                         dark: {
-                            base: '#0B0D14',
-                            panel: '#131620',
-                            border: '#232838',
-                            hover: '#191E2D',
-                            text: '#D1D5DB',
-                            muted: '#6B7280'
+                            base: '#09090b',
+                            panel: '#111114',
+                            surface: '#18181b',
+                            border: '#27272a',
+                            hover: '#1e1e22',
+                            text: '#e4e4e7',
+                            muted: '#71717a'
                         },
                         brand: {
-                            default: '#3B82F6',
-                            hover: '#2563EB'
+                            default: '#f97316',
+                            hover: '#ea580c',
+                            light: '#fb923c',
+                            glow: '#f9731633'
+                        },
+                        accent: {
+                            emerald: '#34d399',
+                            amber: '#fbbf24',
+                            rose: '#fb7185'
                         }
                     },
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-up': 'slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'scale-in': 'scaleIn 0.2s ease-out',
+                        'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(16px) scale(0.98)' }, '100%': { opacity: '1', transform: 'translateY(0) scale(1)' } },
+                        scaleIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
+                        pulseSoft: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.5' } },
                     }
                 }
             }
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0B0D14; color: #D1D5DB; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, sans-serif; background-color: #09090b; color: #e4e4e7; }
         .hidden-pane { display: none !important; }
-        
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #232838; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #374151; }
-        
-        /* Ensures date picker icon and popup supports dark mode inherently */
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
         input[type="date"] { color-scheme: dark; }
 
         .input-dark {
-            background-color: #0B0D14;
-            border: 1px solid #232838;
-            color: #F3F4F6;
-            transition: all 0.2s;
+            background-color: #09090b;
+            border: 1px solid #27272a;
+            color: #fafafa;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .input-dark:focus {
             outline: none;
-            border-color: #3B82F6;
-            background-color: #131620;
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px #f973161a, 0 0 0 1px #f9731633;
+            background-color: #111114;
         }
+        .input-dark::placeholder { color: #52525b; }
 
         .btn-primary {
-            background-color: #3B82F6;
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
             color: white;
-            transition: background-color 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(249, 115, 22, 0.3), 0 1px 2px rgba(0,0,0,0.2);
         }
-        .btn-primary:hover { background-color: #2563EB; }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4), 0 1px 3px rgba(0,0,0,0.2);
+            transform: translateY(-1px);
+        }
+        .btn-primary:active { transform: translateY(0); }
 
         .btn-secondary {
-            background-color: #191E2D;
-            border: 1px solid #232838;
-            color: #D1D5DB;
-            transition: all 0.2s;
+            background-color: #18181b;
+            border: 1px solid #27272a;
+            color: #a1a1aa;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .btn-secondary:hover {
-            background-color: #232838;
-            color: white;
+            background-color: #27272a;
+            border-color: #3f3f46;
+            color: #fafafa;
         }
 
         .tree-children {
             position: relative;
-            margin-left: 2rem;
-            padding-left: 1rem;
-            border-left: 2px solid #232838;
+            margin-left: 1.5rem;
+            padding-left: 1.25rem;
+            border-left: 2px solid #27272a;
         }
-        
-        .progress-bar-bg { background-color: #232838; border-radius: 999px; overflow: hidden; height: 6px; }
-        .progress-bar-fill { background-color: #3B82F6; height: 100%; transition: width 0.3s ease; }
+
+        .progress-bar-bg { background-color: #27272a; border-radius: 999px; overflow: hidden; height: 4px; }
+        .progress-bar-fill {
+            background: linear-gradient(90deg, #f97316 0%, #fb923c 100%);
+            height: 100%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 999px;
+        }
+
+        .modal-backdrop {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .glass-panel {
+            background: rgba(17, 17, 20, 0.95);
+            border: 1px solid rgba(39, 39, 42, 0.8);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(249,115,22,0.05);
+        }
+
+        .sidebar-item {
+            transition: all 0.15s ease;
+            border-radius: 8px;
+            position: relative;
+        }
+        .sidebar-item:hover { background-color: #18181b; }
+        .sidebar-item.active {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0.06) 100%);
+            color: #fb923c;
+        }
+        .sidebar-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 60%;
+            background: #f97316;
+            border-radius: 0 99px 99px 0;
+        }
+
+        .task-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #27272a;
+        }
+        .task-card:hover {
+            border-color: #3f3f46;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #fdba74 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .notif-dot {
+            animation: pulseSoft 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseSoft {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+        }
+
+        select option { background: #111114; color: #e4e4e7; }
     </style>
 </head>
 
 <body class="flex h-screen overflow-hidden">
 
-    
-    <div id="auth-view" class="fixed inset-0 z-50 bg-dark-base flex items-center justify-center fade-in">
-        <div class="w-full max-w-md bg-dark-panel border border-dark-border p-8 rounded-xl shadow-2xl">
-            <h2 id="auth-title" class="text-2xl font-bold text-white mb-2">Sign In to NexGen</h2>
-            <p class="text-sm text-dark-muted mb-8">
-                <a href="#" id="toggle-auth" class="text-brand-default hover:text-blue-400">Need an account? Register</a>
-            </p>
+    <div id="auth-view" class="fixed inset-0 z-50 bg-dark-base flex items-center justify-center animate-fade-in">
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-default/5 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-72 h-72 bg-orange-500/5 rounded-full blur-3xl"></div>
+        </div>
+
+        <div class="w-full max-w-md glass-panel p-8 rounded-2xl relative z-10 animate-slide-up">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-default to-brand-hover flex items-center justify-center shadow-lg shadow-brand-glow">
+                    <img src="matrix_icon_1776173063204.png" alt="Matrix Icon" class="w-8 h-8 filter brightness-0 invert">
+                </div>
+                <div>
+                    <h2 id="auth-title" class="text-xl font-bold text-white">Sign In to TaskMatrix</h2>
+                    <p class="text-xs text-dark-muted mt-0.5">
+                        <a href="#" id="toggle-auth" class="text-brand-light hover:text-brand-default transition-colors">Need an account? Register</a>
+                    </p>
+                </div>
+            </div>
 
             <form id="auth-form" class="space-y-5">
                 <div>
-                    <label class="block text-sm font-medium text-dark-muted mb-1.5">Username</label>
-                    <input type="text" id="username" required class="input-dark w-full px-4 py-2.5 rounded-lg text-sm">
+                    <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">Username</label>
+                    <input type="text" id="username" required class="input-dark w-full px-4 py-3 rounded-xl text-sm" placeholder="Enter your username">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-dark-muted mb-1.5">Password</label>
+                    <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">Password</label>
                     <div class="relative">
-                        <input type="password" id="password" required class="input-dark w-full px-4 py-2.5 rounded-lg text-sm pr-20 text-white">
-                        <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 pr-3 flex items-center text-brand-default hover:text-blue-400 font-bold transition-colors">
-                            <span class="text-sm font-medium">Show</span>
+                        <input type="password" id="password" required class="input-dark w-full px-4 py-3 rounded-xl text-sm pr-20 text-white" placeholder="Enter your password">
+                        <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 pr-4 flex items-center text-brand-light hover:text-brand-default font-semibold transition-colors">
+                            <span class="text-xs font-semibold uppercase tracking-wider">Show</span>
                         </button>
                     </div>
                 </div>
                 <div id="confirm-password-container" class="hidden-pane">
-                    <label class="block text-sm font-medium text-dark-muted mb-1.5">Confirm Password</label>
-                    <input type="password" id="confirm-password" class="input-dark w-full px-4 py-2.5 rounded-lg text-sm">
+                    <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">Confirm Password</label>
+                    <input type="password" id="confirm-password" class="input-dark w-full px-4 py-3 rounded-xl text-sm" placeholder="Confirm your password">
                 </div>
-                
-                <button type="submit" id="auth-submit-btn" class="w-full btn-primary py-2.5 rounded-lg text-sm font-semibold mt-6">
+
+                <button type="submit" id="auth-submit-btn" class="w-full btn-primary py-3 rounded-xl text-sm font-bold mt-2">
                     Sign In
                 </button>
             </form>
-            <div id="auth-error" class="mt-4 text-sm text-red-400 hidden-pane p-3 bg-red-500/10 rounded-lg border border-red-500/20"></div>
+            <div id="auth-error" class="mt-4 text-sm text-red-400 hidden-pane p-3 bg-red-500/10 rounded-xl border border-red-500/20"></div>
         </div>
     </div>
 
-    
     <div id="dashboard-view" class="hidden-pane flex w-full h-full">
-        
-        
-        <aside class="w-64 bg-dark-panel border-r border-dark-border flex flex-col h-full flex-shrink-0">
-            <div class="h-16 flex items-center justify-between px-6 border-b border-dark-border">
-                <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 bg-brand-default rounded-md flex items-center justify-center">
-                        <span class="text-white text-xs font-bold">N</span>
+
+        <aside class="w-[260px] bg-dark-panel border-r border-dark-border flex flex-col h-full flex-shrink-0">
+            <div class="h-16 flex items-center justify-between px-5 border-b border-dark-border">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-default to-brand-hover flex items-center justify-center shadow-md shadow-brand-glow">
+                        <img src="matrix_icon_1776173063204.png" alt="Matrix Icon" class="w-5 h-5 filter brightness-0 invert">
                     </div>
-                    <span class="font-bold text-lg text-white tracking-tight">NexGen</span>
+                    <span class="font-bold text-base text-white tracking-tight">TaskMatrix</span>
                 </div>
-                <button id="notification-btn" class="relative text-dark-muted hover:text-white transition-colors" title="Notifications">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                    <span id="notif-badge" class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full hidden-pane"></span>
+                <button id="notification-btn" class="relative text-dark-muted hover:text-white transition-colors p-1.5 rounded-lg hover:bg-dark-surface" title="Notifications">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <span id="notif-badge" class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-accent-rose rounded-full hidden-pane notif-dot border-2 border-dark-panel"></span>
                 </button>
             </div>
-            
-            <div class="p-4 flex items-center justify-between">
-                <span class="text-xs font-semibold text-dark-muted uppercase tracking-wider">Projects</span>
-                <button id="show-project-modal-btn" class="text-dark-muted hover:text-white transition-colors">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+
+            <div class="px-5 pt-5 pb-2 flex items-center justify-between">
+                <span class="text-[10px] font-bold text-dark-muted uppercase tracking-[0.15em]">My Tasks</span>
+            </div>
+            <div id="assigned-tasks-list" class="overflow-y-auto px-3 space-y-1 pb-2 max-h-40">
+                <div class="text-xs text-dark-muted p-2 italic">No immediate tasks assigned.</div>
+            </div>
+
+            <div class="px-5 pt-3 pb-2 flex items-center justify-between border-t border-dark-border mt-1">
+                <span class="text-[10px] font-bold text-dark-muted uppercase tracking-[0.15em]">Projects</span>
+                <button id="show-project-modal-btn" class="text-dark-muted hover:text-brand-light transition-colors p-1 rounded-md hover:bg-dark-surface">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
                 </button>
             </div>
-            
-            <div id="projects-list" class="flex-1 overflow-y-auto px-3 space-y-1">
-                
+
+            <div id="projects-list" class="flex-1 overflow-y-auto px-3 space-y-0.5 pb-2">
             </div>
-            
+
             <div class="p-4 border-t border-dark-border">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-dark-hover border border-dark-border flex items-center justify-center text-sm font-bold text-white">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-default/30 to-brand-hover/20 border border-brand-default/20 flex items-center justify-center text-xs font-bold text-brand-light">
                         <span id="user-avatar">A</span>
                     </div>
                     <div class="flex-1 overflow-hidden">
                         <p id="user-greeting" class="text-sm font-medium text-white truncate"></p>
                     </div>
-                    <button id="logout-btn" class="text-dark-muted hover:text-red-400 p-1">
+                    <button id="logout-btn" class="text-dark-muted hover:text-accent-rose p-1.5 rounded-lg hover:bg-accent-rose/10 transition-all">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                     </button>
                 </div>
             </div>
         </aside>
 
-        
         <main class="flex-1 flex flex-col bg-dark-base min-w-0 overflow-hidden relative">
-            
+
             <div id="no-project-state" class="flex-1 flex items-center justify-center flex-col text-center p-8">
-                <div class="w-16 h-16 rounded-full bg-dark-panel border border-dark-border flex items-center justify-center mb-4">
-                    <svg width="24" height="24" fill="none" class="text-dark-muted" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 01-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12a2 2 0 002 2h14v-4H6a2 2 0 01-2-2V6z"></path></svg>
+                <div class="w-20 h-20 rounded-2xl bg-dark-surface border border-dark-border flex items-center justify-center mb-6 shadow-lg">
+                    <svg width="28" height="28" fill="none" class="text-dark-muted" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 01-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12a2 2 0 002 2h14v-4H6a2 2 0 01-2-2V6z"></path></svg>
                 </div>
                 <h3 class="text-lg font-semibold text-white mb-2">No Project Selected</h3>
-                <p class="text-dark-muted text-sm max-w-sm">Select a project from the sidebar to view tasks, or inspect your notifications.</p>
+                <p class="text-dark-muted text-sm max-w-sm leading-relaxed">Select a project from the sidebar to view tasks, or inspect your notifications.</p>
             </div>
-            
+
             <div id="active-project-state" class="hidden-pane flex-1 flex flex-col h-full overflow-hidden">
-                
-                <header class="h-16 px-8 flex items-center justify-between border-b border-dark-border bg-dark-base flex-shrink-0">
+
+                <header class="h-16 px-8 flex items-center justify-between border-b border-dark-border bg-dark-base/80 backdrop-blur-sm flex-shrink-0">
                     <div class="flex items-center gap-4">
-                        <h1 id="active-project-name" class="text-xl font-bold text-white tracking-tight">Project Name</h1>
-                        <span id="active-project-role" class="px-2 py-0.5 rounded text-xs font-semibold">Role</span>
-                        <button id="show-edit-project-btn" onclick="toggleProjectSettings()" class="p-1.5 rounded-lg border border-dark-border text-dark-muted hover:text-white hover:bg-dark-hover transition-colors hidden-pane" title="Edit Project Details">
+                        <h1 id="active-project-name" class="text-lg font-bold text-white tracking-tight">Project Name</h1>
+                        <span id="active-project-role" class="px-2 py-0.5 rounded-md text-xs font-semibold">Role</span>
+                        <button id="show-edit-project-btn" onclick="toggleProjectSettings()" class="p-1.5 rounded-lg border border-dark-border text-dark-muted hover:text-brand-light hover:border-brand-default/30 hover:bg-brand-default/5 transition-all hidden-pane" title="Edit Project Details">
                             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
                     </div>
                     <div class="flex items-center gap-3">
-                        <button id="delete-project-btn" class="btn-secondary hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 px-3 py-1.5 rounded-lg text-sm hidden-pane">
+                        <button id="delete-project-btn" class="btn-secondary hover:bg-accent-rose/10 hover:text-accent-rose hover:border-accent-rose/30 px-3.5 py-1.5 rounded-lg text-xs font-medium hidden-pane transition-all">
                             Delete Project
                         </button>
-                        <button id="leave-project-btn" class="btn-secondary px-3 py-1.5 rounded-lg text-sm hidden-pane">
+                        <button id="leave-project-btn" class="btn-secondary px-3.5 py-1.5 rounded-lg text-xs font-medium hidden-pane">
                             Leave
                         </button>
                     </div>
                 </header>
 
-                
-                <div class="h-12 border-b border-dark-border bg-dark-base px-8 flex gap-6 flex-shrink-0">
-                    <button id="tab-btn-workflow" onclick="switchTab('workflow')" class="text-sm font-bold border-b-2 border-brand-default text-brand-default px-1 py-3 transition-colors">Workflow</button>
-                    <button id="tab-btn-manage" onclick="switchTab('manage')" class="text-sm font-medium border-b-2 border-transparent text-dark-muted hover:text-white px-1 py-3 transition-colors">Manage Project</button>
+                <div class="h-11 border-b border-dark-border bg-dark-base px-8 flex gap-1 flex-shrink-0">
+                    <button id="tab-btn-workflow" onclick="switchTab('workflow')" class="text-sm font-semibold border-b-2 border-brand-default text-brand-light px-4 py-2.5 transition-all">Workflow</button>
+                    <button id="tab-btn-manage" onclick="switchTab('manage')" class="text-sm font-medium border-b-2 border-transparent text-dark-muted hover:text-white px-4 py-2.5 transition-all">Manage Project</button>
                 </div>
 
-                
                 <div class="flex-1 flex overflow-hidden relative">
-                    
-                    
+
                     <div class="flex-1 overflow-y-auto p-8 relative flex-col w-full h-full" id="pane-workflow">
                         <div class="flex items-center justify-between mb-6">
                             <div>
                                 <h2 class="text-lg font-semibold text-white">Tasks & Subtasks</h2>
                                 <p class="text-sm text-dark-muted mt-1" id="active-project-desc">Description of the project.</p>
                             </div>
-                            <button id="new-root-task-btn" onclick="triggerNewTask(null)" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+                            <button id="new-root-task-btn" onclick="triggerNewTask(null)" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
                                 New Root Task
                             </button>
                         </div>
-                        
-                        <div id="tasks-tree-container" class="space-y-4 pb-20">
-                            
+
+                        <div id="tasks-tree-container" class="space-y-3 pb-20">
                         </div>
                     </div>
-                    
-                    
+
                     <div class="flex-1 overflow-y-auto p-4 lg:p-8 relative flex-col w-full h-full hidden-pane" id="pane-manage">
-                        
-                        
-                        <div id="project-settings-sec" class="fixed inset-0 z-[70] bg-black/60 hidden-pane flex items-center justify-center p-4">
-                            <div class="bg-dark-panel border border-dark-border w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden fade-in flex flex-col">
-                                <div class="px-6 py-5 border-b border-dark-border bg-dark-base flex items-center justify-between">
-                                    <h2 class="text-lg font-bold text-white uppercase tracking-wider">Project Settings</h2>
-                                    <button onclick="toggleProjectSettings()" class="text-dark-muted hover:text-white p-1 rounded-lg">
-                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+
+                        <div id="project-settings-sec" class="fixed inset-0 z-[70] modal-backdrop hidden-pane flex items-center justify-center p-4">
+                            <div class="glass-panel w-full max-w-2xl rounded-2xl overflow-hidden animate-slide-up flex flex-col">
+                                <div class="px-6 py-5 border-b border-dark-border bg-dark-base/50 flex items-center justify-between">
+                                    <h2 class="text-base font-bold text-white uppercase tracking-wider">Project Settings</h2>
+                                    <button onclick="toggleProjectSettings()" class="text-dark-muted hover:text-white p-1.5 rounded-lg hover:bg-dark-surface transition-colors">
+                                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </button>
                                 </div>
-                                <div class="p-8 grid grid-cols-1 gap-8">
+                                <div class="p-8 grid grid-cols-1 gap-6">
                                     <div>
-                                        <label class="block text-[11px] font-bold text-dark-muted uppercase tracking-widest mb-3">Project Name</label>
-                                        <input type="text" id="edit-proj-name" class="input-dark w-full px-4 py-2.5 rounded-xl text-sm text-white border-dark-border focus:border-brand-default transition-colors">
+                                        <label class="block text-[11px] font-bold text-dark-muted uppercase tracking-widest mb-2.5">Project Name</label>
+                                        <input type="text" id="edit-proj-name" class="input-dark w-full px-4 py-3 rounded-xl text-sm text-white">
                                     </div>
                                     <div>
-                                        <label class="block text-[11px] font-bold text-dark-muted uppercase tracking-widest mb-3">Description</label>
-                                        <textarea id="edit-proj-desc" rows="4" class="input-dark w-full px-4 py-2.5 rounded-xl text-sm text-white border-dark-border focus:border-brand-default transition-colors resize-none"></textarea>
+                                        <label class="block text-[11px] font-bold text-dark-muted uppercase tracking-widest mb-2.5">Description</label>
+                                        <textarea id="edit-proj-desc" rows="4" class="input-dark w-full px-4 py-3 rounded-xl text-sm text-white resize-none"></textarea>
                                     </div>
                                 </div>
-                                <div class="px-6 py-4 bg-dark-base border-t border-dark-border flex justify-end gap-3">
-                                    <button onclick="toggleProjectSettings()" class="btn-secondary px-5 py-2 rounded-lg text-sm font-medium">Cancel</button>
-                                    <button onclick="updateProjectDetails()" class="btn-primary px-5 py-2 rounded-lg text-sm font-bold shadow-lg shadow-brand-default/20">Save Changes</button>
+                                <div class="px-6 py-4 bg-dark-base/50 border-t border-dark-border flex justify-end gap-3">
+                                    <button onclick="toggleProjectSettings()" class="btn-secondary px-5 py-2.5 rounded-xl text-sm font-medium">Cancel</button>
+                                    <button onclick="updateProjectDetails()" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-bold">Save Changes</button>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 h-[calc(100vh-200px)]">
-                            
-                            
-                            <div class="flex flex-col h-full border border-dark-border bg-dark-panel rounded-xl overflow-hidden shadow-lg">
-                                <div class="px-5 py-4 border-b border-dark-border flex items-center justify-between bg-dark-base flex-shrink-0">
+                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 h-[calc(100vh-200px)]">
+
+                            <div class="flex flex-col h-full border border-dark-border bg-dark-panel rounded-2xl overflow-hidden">
+                                <div class="px-5 py-4 border-b border-dark-border flex items-center justify-between bg-dark-base/50 flex-shrink-0">
                                     <div>
                                         <h2 class="text-sm font-bold text-white uppercase tracking-wider">Custom Roles</h2>
                                         <p class="text-[11px] text-dark-muted mt-0.5">Control subtree access by assigning root tasks.</p>
                                     </div>
-                                    <button id="show-add-role-btn" onclick="triggerCreateRole()" class="btn-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 hidden-pane">
-                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+                                    <button id="show-add-role-btn" onclick="triggerCreateRole()" class="btn-primary px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 hidden-pane">
+                                        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
                                         New Role
                                     </button>
                                 </div>
-                                <div id="project-roles-list" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar">
-                                    
+                                <div id="project-roles-list" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
                                 </div>
                             </div>
-                            
-                            
-                            <div class="flex flex-col h-full border border-dark-border bg-dark-panel rounded-xl overflow-hidden shadow-lg">
-                                <div class="px-5 py-4 border-b border-dark-border flex items-center justify-between bg-dark-base flex-shrink-0">
+
+                            <div class="flex flex-col h-full border border-dark-border bg-dark-panel rounded-2xl overflow-hidden">
+                                <div class="px-5 py-4 border-b border-dark-border flex items-center justify-between bg-dark-base/50 flex-shrink-0">
                                     <div>
                                         <h2 class="text-sm font-bold text-white uppercase tracking-wider">Team Members</h2>
                                         <p class="text-[11px] text-dark-muted mt-0.5">Manage team members and view contributions.</p>
                                     </div>
-                                    <button id="show-add-member-btn" class="btn-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 hidden-pane">
-                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                                    <button id="show-add-member-btn" class="btn-primary px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 hidden-pane">
+                                        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
                                         Invite Member
                                     </button>
                                 </div>
-                                <div id="project-members-list" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar">
-                                    
+                                <div id="project-members-list" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
                                 </div>
                             </div>
 
@@ -299,31 +398,27 @@
         </main>
     </div>
 
-    
-
-    
-    <div id="role-modal" class="fixed inset-0 z-[60] bg-black/60 hidden-pane flex items-center justify-center p-4">
-        <div class="bg-dark-panel border border-dark-border w-full max-w-md rounded-xl shadow-xl overflow-hidden fade-in flex flex-col">
+    <div id="role-modal" class="fixed inset-0 z-[60] modal-backdrop hidden-pane flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md rounded-2xl overflow-hidden animate-slide-up flex flex-col">
             <div class="px-6 py-5 border-b border-dark-border">
-                <h3 class="text-lg font-bold text-white">Create Custom Role</h3>
+                <h3 class="text-base font-bold text-white">Create Custom Role</h3>
                 <p class="text-xs text-dark-muted mt-1">Define permissions for a specific task subtree.</p>
             </div>
             <form id="role-form">
-                <div class="p-6 space-y-4">
+                <div class="p-6 space-y-5">
                     <div>
-                        <label class="block text-sm font-medium text-dark-muted mb-1.5">Role Name</label>
-                        <input type="text" id="role-name" required class="input-dark w-full px-3 py-2 rounded-lg text-sm text-white">
+                        <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">Role Name</label>
+                        <input type="text" id="role-name" required class="input-dark w-full px-4 py-3 rounded-xl text-sm text-white" placeholder="e.g. Frontend Lead">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-dark-muted mb-2">Role Color</label>
-                        <input type="hidden" id="role-color" value="#3B82F6">
-                        <div id="role-color-picker" class="flex flex-wrap gap-2.5">
-                            
-                            <div onclick="selectRoleColor('#3B82F6', this)" class="w-8 h-8 rounded-full cursor-pointer border-2 border-white ring-2 ring-brand-default/40 transition-all bg-[#3B82F6]" title="Blue"></div>
+                        <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2.5">Role Color</label>
+                        <input type="hidden" id="role-color" value="#6366F1">
+                        <div id="role-color-picker" class="flex flex-wrap gap-3">
+                            <div onclick="selectRoleColor('#6366F1', this)" class="w-8 h-8 rounded-full cursor-pointer border-2 border-white ring-2 ring-brand-default/40 transition-all bg-[#6366F1] hover:scale-110" title="Indigo"></div>
                             <div onclick="selectRoleColor('#8B5CF6', this)" class="w-8 h-8 rounded-full cursor-pointer border-2 border-transparent hover:scale-110 transition-all bg-[#8B5CF6]" title="Purple"></div>
                             <div onclick="selectRoleColor('#EC4899', this)" class="w-8 h-8 rounded-full cursor-pointer border-2 border-transparent hover:scale-110 transition-all bg-[#EC4899]" title="Pink"></div>
                             <div onclick="selectRoleColor('#EF4444', this)" class="w-8 h-8 rounded-full cursor-pointer border-2 border-transparent hover:scale-110 transition-all bg-[#EF4444]" title="Red"></div>
-                            <div onclick="selectRoleColor('#F59E0B', this)" class="w-8 h-8 rounded-full cursor-pointer border-2 border-transparent hover:scale-110 transition-all bg-[#F59E0B]" title="Orange"></div>
+                            <div onclick="selectRoleColor('#F59E0B', this)" class="w-8 h-8 rounded-full cursor-pointer border-2 border-transparent hover:scale-110 transition-all bg-[#F59E0B]" title="Amber"></div>
                             <div onclick="selectRoleColor('#EAB308', this)" class="w-8 h-8 rounded-full cursor-pointer border-2 border-transparent hover:scale-110 transition-all bg-[#EAB308]" title="Yellow"></div>
                             <div onclick="selectRoleColor('#22C55E', this)" class="w-8 h-8 rounded-full cursor-pointer border-2 border-transparent hover:scale-110 transition-all bg-[#22C55E]" title="Green"></div>
                             <div onclick="selectRoleColor('#14B8A6', this)" class="w-8 h-8 rounded-full cursor-pointer border-2 border-transparent hover:scale-110 transition-all bg-[#14B8A6]" title="Teal"></div>
@@ -331,86 +426,84 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-dark-muted mb-1.5">Root Task Access</label>
-                        <select id="role-task" required class="input-dark w-full px-3 py-2 rounded-lg text-sm text-white">
-                            
+                        <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">Root Task Access</label>
+                        <select id="role-task" required class="input-dark w-full px-4 py-3 rounded-xl text-sm text-white">
                         </select>
                     </div>
                 </div>
-                <div class="px-6 py-4 bg-dark-base border-t border-dark-border flex justify-end gap-3">
-                    <button type="button" class="btn-secondary px-4 py-2 rounded-lg text-sm" onclick="document.getElementById('role-modal').classList.add('hidden-pane')">Cancel</button>
-                    <button type="submit" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Create</button>
+                <div class="px-6 py-4 bg-dark-base/50 border-t border-dark-border flex justify-end gap-3">
+                    <button type="button" class="btn-secondary px-4 py-2.5 rounded-xl text-sm" onclick="document.getElementById('role-modal').classList.add('hidden-pane')">Cancel</button>
+                    <button type="submit" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold">Create</button>
                 </div>
             </form>
         </div>
     </div>
 
-    
-    <div id="notif-modal" class="fixed inset-0 z-[60] bg-black/60 hidden-pane flex items-center justify-center p-4">
-        <div class="bg-dark-panel border border-dark-border w-full max-w-md rounded-xl shadow-xl overflow-hidden fade-in flex flex-col max-h-[80vh]">
-            <div class="px-6 py-4 border-b border-dark-border flex justify-between items-center bg-dark-base">
-                <h3 class="text-lg font-bold text-white">Project Invitations</h3>
-                <button class="text-dark-muted hover:text-white" onclick="document.getElementById('notif-modal').classList.add('hidden-pane')">✕</button>
+    <div id="notif-modal" class="fixed inset-0 z-[60] modal-backdrop hidden-pane flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md rounded-2xl overflow-hidden animate-slide-up flex flex-col max-h-[80vh]">
+            <div class="px-6 py-4 border-b border-dark-border flex justify-between items-center bg-dark-base/50">
+                <h3 class="text-base font-bold text-white">Project Invitations</h3>
+                <button class="text-dark-muted hover:text-white p-1.5 rounded-lg hover:bg-dark-surface transition-colors" onclick="document.getElementById('notif-modal').classList.add('hidden-pane')">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
-            <div id="notif-list" class="flex-1 overflow-y-auto p-6 space-y-3 bg-dark-panel">
-                
+            <div id="notif-list" class="flex-1 overflow-y-auto p-5 space-y-3">
             </div>
         </div>
     </div>
 
-    
-    <div id="project-modal" class="fixed inset-0 z-[60] bg-black/60 hidden-pane flex items-center justify-center p-4">
-        <div class="bg-dark-panel border border-dark-border w-full max-w-md rounded-xl shadow-xl overflow-hidden fade-in">
+    <div id="project-modal" class="fixed inset-0 z-[60] modal-backdrop hidden-pane flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md rounded-2xl overflow-hidden animate-slide-up">
             <div class="px-6 py-5 border-b border-dark-border">
-                <h3 class="text-lg font-bold text-white">Construct Project</h3>
+                <h3 class="text-base font-bold text-white">Create New Project</h3>
+                <p class="text-xs text-dark-muted mt-1">Set up a new workspace for your team.</p>
             </div>
             <form id="project-form">
-                <div class="p-6 space-y-4">
+                <div class="p-6 space-y-5">
                     <div>
-                        <label class="block text-sm font-medium text-dark-muted mb-1.5">Project Name</label>
-                        <input type="text" id="project-name" required class="input-dark w-full px-3 py-2 rounded-lg text-sm">
+                        <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">Project Name</label>
+                        <input type="text" id="project-name" required class="input-dark w-full px-4 py-3 rounded-xl text-sm" placeholder="e.g. Marketing Campaign Q2">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-dark-muted mb-1.5">Description</label>
-                        <textarea id="project-desc" rows="3" class="input-dark w-full px-3 py-2 rounded-lg text-sm"></textarea>
+                        <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">Description</label>
+                        <textarea id="project-desc" rows="3" class="input-dark w-full px-4 py-3 rounded-xl text-sm" placeholder="What is this project about?"></textarea>
                     </div>
                 </div>
-                <div class="px-6 py-4 bg-dark-base border-t border-dark-border flex justify-end gap-3">
-                    <button type="button" class="btn-secondary px-4 py-2 rounded-lg text-sm" onclick="document.getElementById('project-modal').classList.add('hidden-pane')">Cancel</button>
-                    <button type="submit" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Create</button>
+                <div class="px-6 py-4 bg-dark-base/50 border-t border-dark-border flex justify-end gap-3">
+                    <button type="button" class="btn-secondary px-4 py-2.5 rounded-xl text-sm" onclick="document.getElementById('project-modal').classList.add('hidden-pane')">Cancel</button>
+                    <button type="submit" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold">Create</button>
                 </div>
             </form>
         </div>
     </div>
 
-    
-    <div id="task-modal" class="fixed inset-0 z-[60] bg-black/60 hidden-pane flex items-center justify-center p-4">
-        <div class="bg-dark-panel border border-dark-border w-full max-w-lg rounded-xl shadow-xl overflow-hidden fade-in">
+    <div id="task-modal" class="fixed inset-0 z-[60] modal-backdrop hidden-pane flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-lg rounded-2xl overflow-hidden animate-slide-up">
             <div class="px-6 py-5 border-b border-dark-border">
-                <h3 id="task-modal-title" class="text-lg font-bold text-white">Create Task</h3>
+                <h3 id="task-modal-title" class="text-base font-bold text-white">Create Task</h3>
             </div>
             <form id="task-form">
                 <input type="hidden" id="task-action-mode" value="create">
                 <input type="hidden" id="task-target-id">
                 <input type="hidden" id="task-parent-id">
-                <div class="p-6 space-y-4">
+                <div class="p-6 space-y-5">
                     <div>
-                        <label class="block text-sm font-medium text-dark-muted mb-1.5">Title</label>
-                        <input type="text" id="task-title" required class="input-dark w-full px-3 py-2 rounded-lg text-sm text-white">
+                        <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">Title</label>
+                        <input type="text" id="task-title" required class="input-dark w-full px-4 py-3 rounded-xl text-sm text-white" placeholder="What needs to be done?">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-dark-muted mb-1.5">Description (Optional)</label>
-                        <textarea id="task-desc" rows="2" class="input-dark w-full px-3 py-2 rounded-lg text-sm text-white"></textarea>
+                        <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">Description (Optional)</label>
+                        <textarea id="task-desc" rows="2" class="input-dark w-full px-4 py-3 rounded-xl text-sm text-white" placeholder="Add more context..."></textarea>
                     </div>
-                    
+
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-dark-muted mb-1.5">Due Date</label>
-                            <input type="date" id="task-date" class="input-dark w-full px-3 py-2 rounded-lg text-sm text-white focus:text-white focus:bg-dark-panel">
+                            <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">Due Date</label>
+                            <input type="date" id="task-date" class="input-dark w-full px-4 py-3 rounded-xl text-sm text-white">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-dark-muted mb-1.5">Priority</label>
-                            <select id="task-priority" class="input-dark w-full px-3 py-2 rounded-lg text-sm text-white">
+                            <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">Priority</label>
+                            <select id="task-priority" class="input-dark w-full px-4 py-3 rounded-xl text-sm text-white">
                                 <option value="Low">Low</option>
                                 <option value="Medium" selected>Medium</option>
                                 <option value="High">High</option>
@@ -418,70 +511,68 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-dark-muted mb-2">Assignees</label>
-                        <div id="task-assignees-container" class="input-dark w-full p-3 rounded-lg text-sm h-32 overflow-y-auto space-y-2 custom-scrollbar">
-                            
+                        <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">Assignees</label>
+                        <div id="task-assignees-container" class="input-dark w-full p-3 rounded-xl text-sm h-32 overflow-y-auto space-y-1">
                         </div>
                     </div>
                 </div>
-                <div class="px-6 py-4 bg-dark-base border-t border-dark-border flex justify-end gap-3">
-                    <button type="button" class="btn-secondary px-4 py-2 rounded-lg text-sm" onclick="document.getElementById('task-modal').classList.add('hidden-pane')">Cancel</button>
-                    <button type="submit" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold" id="task-save-btn">Save Task</button>
+                <div class="px-6 py-4 bg-dark-base/50 border-t border-dark-border flex justify-end gap-3">
+                    <button type="button" class="btn-secondary px-4 py-2.5 rounded-xl text-sm" onclick="document.getElementById('task-modal').classList.add('hidden-pane')">Cancel</button>
+                    <button type="submit" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold" id="task-save-btn">Save Task</button>
                 </div>
             </form>
         </div>
     </div>
 
-    
-    <div id="action-modal" class="fixed inset-0 z-[70] bg-black/60 hidden-pane flex items-center justify-center p-4">
-        <div class="bg-dark-panel border border-dark-border w-full max-w-sm rounded-xl shadow-xl overflow-hidden fade-in">
+    <div id="action-modal" class="fixed inset-0 z-[70] modal-backdrop hidden-pane flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-sm rounded-2xl overflow-hidden animate-slide-up">
             <div class="px-6 py-5 border-b border-dark-border">
-                <h3 id="action-title" class="text-lg font-bold text-white">Action</h3>
+                <h3 id="action-title" class="text-base font-bold text-white">Action</h3>
             </div>
             <div class="p-6">
                 <p id="action-desc" class="text-sm text-dark-muted mb-4"></p>
                 <div id="action-input-section">
-                    <input type="text" id="action-input" class="input-dark w-full px-3 py-2 rounded-lg text-sm">
+                    <input type="text" id="action-input" class="input-dark w-full px-4 py-3 rounded-xl text-sm" placeholder="Type here...">
                 </div>
-                
+
                 <div id="action-role-section" class="hidden-pane mt-4">
-                    <label class="block text-sm font-medium text-dark-muted mb-1.5">Role</label>
-                    <select id="action-role" class="input-dark w-full px-3 py-2 rounded-lg text-sm text-white">
+                    <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">Role</label>
+                    <select id="action-role" class="input-dark w-full px-4 py-3 rounded-xl text-sm text-white">
                         <option value="Admin">Admin</option>
                         <option value="Member" selected>Member</option>
                         <option value="Viewer">Viewer</option>
                     </select>
-                    <p id="action-role-desc" class="text-[11px] text-dark-muted mt-1.5 leading-relaxed"></p>
+                    <p id="action-role-desc" class="text-[11px] text-dark-muted mt-2 leading-relaxed"></p>
                 </div>
-                
-                <div id="action-checkbox-section" class="hidden-pane mt-4 bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex items-center gap-3">
-                    <input type="checkbox" id="action-checkbox" class="accent-red-500">
-                    <label for="action-checkbox" id="action-checkbox-label" class="text-sm text-red-300 font-medium">I'm sure</label>
+
+                <div id="action-checkbox-section" class="hidden-pane mt-4 bg-accent-rose/10 border border-accent-rose/20 p-3.5 rounded-xl flex items-center gap-3">
+                    <input type="checkbox" id="action-checkbox" class="accent-[#fb7185] w-4 h-4 rounded">
+                    <label for="action-checkbox" id="action-checkbox-label" class="text-sm text-accent-rose font-medium">I'm sure</label>
                 </div>
-                <div id="action-error" class="hidden-pane mt-3 text-xs text-red-400"></div>
+                <div id="action-error" class="hidden-pane mt-3 text-xs text-accent-rose"></div>
             </div>
-            <div class="px-6 py-4 bg-dark-base border-t border-dark-border flex justify-end gap-3">
-                <button type="button" id="action-cancel-btn" class="btn-secondary px-4 py-2 rounded-lg text-sm">Cancel</button>
-                <button type="button" id="action-confirm-btn" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Confirm</button>
+            <div class="px-6 py-4 bg-dark-base/50 border-t border-dark-border flex justify-end gap-3">
+                <button type="button" id="action-cancel-btn" class="btn-secondary px-4 py-2.5 rounded-xl text-sm">Cancel</button>
+                <button type="button" id="action-confirm-btn" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold">Confirm</button>
             </div>
         </div>
     </div>
-    
-    
-    <div id="remark-modal" class="fixed inset-0 z-[60] bg-black/60 hidden-pane flex items-center justify-center p-4">
-        <div class="bg-dark-panel border border-dark-border w-full max-w-lg rounded-xl shadow-xl overflow-hidden fade-in flex flex-col max-h-[80vh]">
-            <div class="px-6 py-4 border-b border-dark-border flex justify-between items-center bg-dark-base">
-                <h3 class="text-lg font-bold text-white">Remarks</h3>
-                <button class="text-dark-muted hover:text-white" onclick="document.getElementById('remark-modal').classList.add('hidden-pane')">✕</button>
+
+    <div id="remark-modal" class="fixed inset-0 z-[60] modal-backdrop hidden-pane flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-lg rounded-2xl overflow-hidden animate-slide-up flex flex-col max-h-[80vh]">
+            <div class="px-6 py-4 border-b border-dark-border flex justify-between items-center bg-dark-base/50">
+                <h3 class="text-base font-bold text-white">Remarks</h3>
+                <button class="text-dark-muted hover:text-white p-1.5 rounded-lg hover:bg-dark-surface transition-colors" onclick="document.getElementById('remark-modal').classList.add('hidden-pane')">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
-            <div id="remark-list" class="flex-1 overflow-y-auto p-6 space-y-4 bg-dark-panel">
-                
+            <div id="remark-list" class="flex-1 overflow-y-auto p-5 space-y-3">
             </div>
-            <div class="p-4 bg-dark-base border-t border-dark-border">
+            <div class="p-4 bg-dark-base/50 border-t border-dark-border">
                 <form id="remark-form" class="flex gap-2">
                     <input type="hidden" id="remark-task-id">
-                    <input type="text" id="remark-input" required placeholder="Type a remark..." class="input-dark flex-1 px-4 py-2 rounded-lg text-sm text-white">
-                    <button type="submit" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Post</button>
+                    <input type="text" id="remark-input" required placeholder="Type a remark..." class="input-dark flex-1 px-4 py-2.5 rounded-xl text-sm text-white">
+                    <button type="submit" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold">Post</button>
                 </form>
             </div>
         </div>
@@ -492,6 +583,7 @@
     <script src="js/projects.js"></script>
     <script src="js/actions.js"></script>
     <script src="js/tasks.js"></script>
+    <script src="js/assigned_tasks.js"></script>
     <script src="js/modal.js"></script>
     <script src="js/main.js"></script>
 </body>

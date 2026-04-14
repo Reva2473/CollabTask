@@ -273,5 +273,42 @@ def add_remark(task_id):
         {"_id": obj_id},
         {"$push": {"remarks": new_remark}}
     )
-    
     return jsonify({"msg": "Remark added"}), 201
+
+@tasks_bp.route('/my_assigned', methods=['GET'])
+@jwt_required()
+def get_my_assigned_tasks():
+    user_id = get_jwt_identity()
+    user_tasks = tasks_collection.find({"assignees": user_id, "is_done": False})
+    tasks_data = []
+    
+    for t in user_tasks:
+        # Also let's find the root task and project names
+        project_id = t.get('project_id')
+        project = projects_collection.find_one({"_id": ObjectId(project_id)})
+        project_name = project.get('name') if project else "Unknown"
+
+        # Traversing up for root task
+        root_title = t.get('title')
+        current_id = t.get('parent_task_id')
+        while current_id:
+            try:
+                parent = tasks_collection.find_one({"_id": ObjectId(current_id)})
+                if not parent:
+                    break
+                root_title = parent.get('title')
+                current_id = parent.get('parent_task_id')
+            except:
+                break
+
+        tasks_data.append({
+            "id": str(t['_id']),
+            "title": t.get('title'),
+            "due_date": t.get('due_date'),
+            "priority": t.get('priority'),
+            "project_name": project_name,
+            "root_title": root_title,
+            "project_id": project_id
+        })
+        
+    return jsonify(tasks_data), 200
